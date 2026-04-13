@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Oxide.Plugins
 {
-    [Info("SNoSteam", "setfps", "1.0")]
+    [Info("SNoSteam", "setfps", "1.0.1")]
     [Description("")]
     public class SNoSteam : RustPlugin
     {
@@ -110,7 +110,7 @@ namespace Oxide.Plugins
 
                 if (!authSuccess)
                 {
-                    connection.authStatus = "ok";
+                    connection.authStatusSteam = "ok";
                     _onAuthenticatedLocal.Invoke(null, new object[] { connection });
                     _onAuthenticatedRemote.Invoke(null, new object[] { connection });
                 }
@@ -168,7 +168,7 @@ namespace Oxide.Plugins
                     _connectionAuth = __instance;
 
                 _instance.PrintWarning($"OnNewConnection => {connection.username} {connection.userid} " +
-                    $"{connection.ipaddress} {connection.authStatus} {connection.token.Length}");
+                    $"{connection.ipaddress} {connection.authStatusSteam} {connection.token.Length}");
 
                 if (DeveloperList.Contains(connection.userid))
                 {
