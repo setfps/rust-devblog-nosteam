@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Oxide.Plugins
 {
-    [Info("SNoSteam", "setfps", "1.0.1")]
+    [Info("SNoSteam", "setfps", "1.0.2")]
     [Description("")]
     public class SNoSteam : RustPlugin
     {
@@ -22,6 +22,8 @@ namespace Oxide.Plugins
         private static MethodInfo _onAuthenticatedRemote;
         private static ConnectionAuth _connectionAuth;
         private static SNoSteam _instance;
+
+        private static bool DisableClientVersionCheck = true; // Disable client version check to allow older clients to connect
         #endregion
 
         #region Oxide Hooks
@@ -80,13 +82,18 @@ namespace Oxide.Plugins
                     new HarmonyMethod(typeof(PatchingHooks), nameof(PatchingHooks.ValidateConnecting)));
 
                 _harmony.Patch(AccessTools.Method(steamPlatformType, "UpdatePlayerSession"),
-                    new HarmonyMethod(typeof(PatchingHooks), nameof(PatchingHooks.UpdatePlayerSession))); //idiot? 
+                    new HarmonyMethod(typeof(PatchingHooks), nameof(PatchingHooks.UpdatePlayerSession)));
 
                 _harmony.Patch(AccessTools.Method(steamPlatformType, "EndPlayerSession"),
                     new HarmonyMethod(typeof(PatchingHooks), nameof(PatchingHooks.EndPlayerSession)));
 
                 _harmony.Patch(AccessTools.Method(steamPlatformType, "BeginPlayerSession"),
                     new HarmonyMethod(typeof(PatchingHooks), nameof(PatchingHooks.BeginPlayerSession)));
+
+                if (DisableClientVersionCheck)
+                {
+                    _harmony.Patch(AccessTools.Method(connectionAuthType, "GetMinClientRequirement"), prefix: new HarmonyMethod(typeof(PatchingHooks), nameof(PatchingHooks.GetMinClientRequirement)));
+                }
             }
             catch (Exception ex)
             {
@@ -99,6 +106,12 @@ namespace Oxide.Plugins
         #region Patching Hooks
         private static class PatchingHooks
         {
+            internal static bool GetMinClientRequirement(ref ValueTuple<int, int>? __result)
+            {
+                __result = null;
+                return false;
+            }
+
             internal static bool BeginPlayerSession(ulong userId, byte[] authToken, ref bool __result)
             {
                 bool authSuccess = SteamServer.BeginAuthSession(authToken, userId);
